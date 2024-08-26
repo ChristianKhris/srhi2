@@ -16,7 +16,7 @@ mkdir /repoveeam
 mount /dev/repoimm/repoveeam /repoveeam
 adduser veeamrepo
 echo "****** Please Enter veeamrepo Password ******"
-passwd 
+passwd veeamrepo
 mkdir /repoveeam/backups
 chown veeamrepo:veeamrepo /repoveeam/backups
 chmod 700 /repoveeam/backups
@@ -25,6 +25,31 @@ echo "******Saving /etc/fstab as /etc/fstab.$$******"
 /bin/cp -p /etc/fstab /etc/fstab.$$
 echo "******Adding /repoveeam to /etc/fstab entry******"
 echo "UUID=${UUID} /repoveeam xfs defaults 1 1" >> /etc/fstab
+#########################################################################################################
+listadiscos=$(lsblk)
+scandisks=$(rescan-scsi-bus.sh)
+
+echo "Scanning Disks....: $scandisks"
+
+echo "List Disks : $listadiscos"
+
+echo "****** Enter disk as example /dev/sdb ******: "
+read
+pvcreate $REPLY
+vgcreate repoimmSQL $REPLY
+lvcreate -l 100%FREE --name repoimmSQL repoimmSQL
+mkfs.xfs -b size=4096 -m reflink=1,crc=1 /dev/repoimmSQL/repoimmSQL
+mkdir /repoimmSQL
+mount /dev/repoimmSQL/repoimmSQL /repoimmSQL
+mkdir /repoimmSQL/backups
+chown veeamrepo:veeamrepo /repoimmSQL/backups
+chmod 700 /repoimmSQL/backups
+UUID=$(blkid | grep repoimmSQL-repoimmSQL |cut -f2 -d'='|cut -f2 -d'"')
+echo "******Saving /etc/fstab as /etc/fstab.$$******"
+/bin/cp -p /etc/fstab /etc/fstab.$$
+echo "******Adding /repoimmSQL to /etc/fstab entry******"
+echo "UUID=${UUID} /repoimmSQL xfs defaults 1 1" >> /etc/fstab
+#######################################################################################################################
 echo "******Please Add The New Repository with veeamrepo single-use credentiales in Veeam Backup & Replication******"
 while [ 1 ]
 do
